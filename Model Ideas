@@ -1,0 +1,14 @@
+
+- Models to Try (Ideas)
+
+* Bayesian:
+GP Classification Ensemble
+Bayesian Mixture Model
+Bayesian Network (If there are any causality relationships among features)
+
+* Non-Bayesian:
+Naive Bayes Classification
+Logistic Regression
+Neural Network (why not?)
+
+
