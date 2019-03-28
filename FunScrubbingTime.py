@@ -1,3 +1,6 @@
+"""
+
+"""
 import pandas as pd
 import re
 import numpy as np
@@ -159,3 +162,5 @@ print(US_MERGER_DATA.shape)
 print("---- Null Count ----")
 print(US_MERGER_DATA.isnull().sum())
 
+# III. Save as CSV:
+US_MERGER_DATA.to_csv(us_data_path+"Scrubbed_No_DefaultDistance.csv", sep=",", index=False)
