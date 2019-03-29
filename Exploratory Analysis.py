@@ -12,18 +12,19 @@ intl_data_path = "C:/Users/kevin/OneDrive/Desktop/RISK ARBITRAGE/SDC/Intl_Merger
 US_MERGER_DATA = pd.read_csv(us_data_path,)
 print(US_MERGER_DATA.head())
 print(US_MERGER_DATA.shape)  # (121965, 270)
-
+print("---- Null Count ----")
+print(US_MERGER_DATA.isnull().sum())
 
 # I. Explore How the Data is Distributed
-# for col in US_MERGER_DATA.columns[0:31]:
-#     a = col.replace("/", " per ")
-#     data = [go.Histogram(
-#         x=US_MERGER_DATA[col]
-#     )]
-#     layout = go.Layout(
-#         title=col
-#     )
-#     plot(data, filename=f"{a}")
+for col in US_MERGER_DATA.columns[0:31]:
+    a = col.replace("/", " per ")
+    data = [go.Histogram(
+        x=US_MERGER_DATA[col]
+    )]
+    layout = go.Layout(
+        title=col
+    )
+    plot(data, filename=f"{a}")
 
 # Observation from Histogram:
 # Status: Significantly more success than failure (TODO: perhaps SDC is missing lots of failure data? or not?)
@@ -54,3 +55,17 @@ print(US_MERGER_DATA.shape)  # (121965, 270)
 
 # Price/Share:  -> Probably not that important
 #
+
+# II: Dealing With Missing Data
+# NOTE: We believe that the missing data isn't missing at random. Because the nature of M&As suggest that
+# some information may not be released due to a reason that depends on some of the other data attributes
+# (both observed and unobserved).
+# Therefore, imputing missing data seems necessary.
+
+# IDEAS:
+# 1. MLE/MAP estimation of parameters for model distributions & random sample
+# 2. kNN Imputation
+# 2. GP Imputation
+# 3. Regression Imputation
+# 4. "Bayesian" Imputation: Find joint density f(x1, x2, ..., xd). for missing points, find
+# E[f(x1, ..., xd)|x1=a1, x2=a2, ..., xd=ad]
