@@ -16,10 +16,10 @@ print("---- Null Count ----")
 print(US_MERGER_DATA.isnull().sum())
 
 # I. Explore How the Data is Distributed
-for col in US_MERGER_DATA.columns[0:31]:
+for col in US_MERGER_DATA.columns[6:20]:
     a = col.replace("/", " per ")
     data = [go.Histogram(
-        x=US_MERGER_DATA[col]
+        x=np.log(US_MERGER_DATA[col])
     )]
     layout = go.Layout(
         title=col
@@ -36,6 +36,7 @@ for col in US_MERGER_DATA.columns[0:31]:
 #       -> Gamma with low alpha(a<=1)?
 #       -> Folded normal Distribution ?
 #       -> Log Normal?
+#       -> Inverse Normal?
 # Target Debt: //
 # Target Enterprise Value: //
 # Target Equity Value //
@@ -69,3 +70,44 @@ for col in US_MERGER_DATA.columns[0:31]:
 # 3. Regression Imputation
 # 4. "Bayesian" Imputation: Find joint density f(x1, x2, ..., xd). for missing points, find
 # E[f(x1, ..., xd)|x1=a1, x2=a2, ..., xd=ad]
+
+
+# MLE estimates
+# 1) Gamma dist
+# beta = alpha*n/sum(x_i, i=1->n)
+# intermediate term s = ln(mean(x)) - (1/n)sum(ln(x_i),i=1->n)
+# alpha =(approx) (3-s + sqrt((s-3)**2 + 24s))/12s
+
+# 2) LogNormal
+# mu = sum(ln(x_i), i=1->n)
+# sigma^2 = sum((ln(x_i)-mu)**2, i=1->n)
+
+
+def mle_parameters(X, distribution):
+    """
+    :param X:
+    :param distribution:
+    :return:
+    """
+    X = np.asarray(X).reshape(-1,)
+    if distribution == "Gamma":
+        x_bar = np.mean(X)
+        s = np.log(x_bar) - (1 / len(X)) * np.sum(np.log(X))
+        alpha = (3 - s + np.sqrt((s - 3) ** 2 + 24 * s)) / (12 * s)
+        beta = alpha / x_bar
+        return alpha, beta
+    elif distribution == "LogNormal":
+        logX = np.log(X)
+        mu = np.mean(logX)
+        sigma_sqrd = np.mean((logX - mu) ** 2)
+        return mu, sigma_sqrd
+    elif distribution == "Normal":
+        mu = np.mean(X)
+        sigma_sqrd = np.mean((X - mu) ** 2)
+        return mu, sigma_sqrd
+    else:
+        pass
+
+
+
+

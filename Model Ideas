@@ -1,14 +1,41 @@
+- Outline for Project
+1. Scrub Data & Feature Engineering
+2. Bayesian Missing Data Inference
+ -> transform everything to be normal
+ -> set joint prior (the "right" approach?)
+ -> Find joint posterior, condition on available data for inference
+3. Fit Models (Bayesian and Non-Bayesian)
+4. Bayesian Model Selection
+
+*** Remember to modularize lots of functions
+
+
 
 - Models to Try (Ideas)
-
 * Bayesian:
-GP Classification Ensemble
-Bayesian Mixture Model
-Bayesian Network (If there are any causality relationships among features)
+Sparse GP
+Bayesian Gaussian Mixture Model Classification
 
 * Non-Bayesian:
 Naive Bayes Classification
 Logistic Regression
-Neural Network (why not?)
+Neural Network (why not?) or SVM ?
+Gaussian Mixture Model Classification
 
 
+
+- Further work?
+More "Exact" feature transformations, nailing down the distribution approximations and what not (more advanced approximation methods?)
+
+
+- Questions
+1. choosing the right prior? If we look at the shape of the data first and come up with some arbitrary prior?
+2. Say we find a joint posterior, and do inference based on conditional posterior given available data, then would that give us any bias?
+3.
+
+
+- Imputation
+1. find sample mean and sample cov
+ -> nancov & nanmean  :ignoring missing values and impute given paramameters -> conditional gaussian given available
+ -> more robust
+2. PCA with imputation
