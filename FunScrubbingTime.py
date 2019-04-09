@@ -23,7 +23,8 @@ US_MERGER_DATA.columns = [name.replace("\n", " ") for name in US_MERGER_DATA.col
 
 # INTERNATIONAL MERGER DATA
 intl_data_path = "C:/Users/kevin/OneDrive/Desktop/RISK ARBITRAGE/SDC/Intl_Merger_Data_"
-intl_data_years = []
+intl_data_years = [1979, 1989]
+intl_data_years.extend(list(range(1989, 2020, 2)))
 
 # INTL_MERGER_DATA = pd.read_csv(intl_data_path + f"{intl_data_years[0]}_{intl_data_years[1]}.csv")
 # for i in range(1, len(intl_data_years)-1):
