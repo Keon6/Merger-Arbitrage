@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 from sklearn.cluster import k_means, dbscan
-from Modules.UsefulFunctions import multivariate_gaussian_mle_estimation
+from Modules.UsefulFunctions import multivariate_gaussian_parameter_estimation, \
+    multivariate_gaussian_bayesian_estimation
 from plotly.offline import plot
 import plotly.graph_objs as go
 
@@ -9,17 +10,21 @@ us_data_path = "C:/Users/kevin/OneDrive/Desktop/RISK ARBITRAGE/SDC/US_Merger_Dat
 intl_data_path = "C:/Users/kevin/OneDrive/Desktop/RISK ARBITRAGE/SDC/Intl_Merger_Data_Scrubbed_No_DefaultDistance.csv"
 
 US_MERGER_DATA = pd.read_csv(us_data_path)
-print(US_MERGER_DATA.head())
-print(US_MERGER_DATA.shape)  # (121965, 270)
-print("---- Null Count ----")
-print(US_MERGER_DATA.isnull().sum())
-print("---- Column Names and types ----")
-colnames = US_MERGER_DATA.columns
-for col in colnames:
-    print("'" + col+"'", US_MERGER_DATA[col].dtypes)
+# print(US_MERGER_DATA.head())
+# print(US_MERGER_DATA.shape)  # (121965, 270)
+# print("---- Null Count ----")
+# print(US_MERGER_DATA.isnull().sum())
+# print("---- Column Names and types ----")
+# colnames = US_MERGER_DATA.columns
+# for col in colnames:
+#     print("'" + col+"'", US_MERGER_DATA[col].dtypes)
+
 
 # I. Explore How the Data is Distributed
 numerical_cols = US_MERGER_DATA.columns[3:30]
+# print("----- Non-null counts -----")
+# print(US_MERGER_DATA[numerical_cols].notnull().count())
+# print(US_MERGER_DATA[numerical_cols].dropna().shape[0])
 # i = 3
 # for col in numerical_cols:
 #     if i <= 5:
@@ -40,8 +45,69 @@ numerical_cols = US_MERGER_DATA.columns[3:30]
 # II. Transform Numerical Data to multivariate Gaussian
 
 # III. Estimate parameters of multivariate Gaussian and do inference
-Mu = US_MERGER_DATA[numerical_cols].mean()
-Sigma = US_MERGER_DATA[numerical_cols].cov()
+##########################################3
+# test 1
+# mu, sig = multivariate_gaussian_bayesian_estimation(X=US_MERGER_DATA[numerical_cols])
+# print(mu.shape)
+# print(sig.shape)
+#
+# #test 2
+# mu2, sig2 = multivariate_gaussian_bayesian_estimation(X=US_MERGER_DATA[numerical_cols], estimation_method="MAP")
+# print(mu2.shape)
+# print(sig2.shape)
+# print(mu-mu2)
+# print(sig-sig2)
+#
+# #test 3
+# mu3, sig3 = multivariate_gaussian_bayesian_estimation(X=US_MERGER_DATA[numerical_cols], estimation_method="random_sample")
+# print(mu2.shape)
+# print(sig2.shape)
+# print(mu-mu3)
+# print(sig-sig3)
+
+# #test 4
+# mu, sig = multivariate_gaussian_bayesian_estimation(X=US_MERGER_DATA[numerical_cols], m=1000)
+# print(mu.shape)
+# print(sig.shape)
+#
+#
+# #test 5
+# mu2, sig2 = multivariate_gaussian_bayesian_estimation(X=US_MERGER_DATA[numerical_cols], nu_0=1000)
+# print(mu2.shape)
+# print(sig2.shape)
+# print(mu-mu2)
+# print(sig-sig2)
+
+
+
+
+
+a = np.array([1,2,3,4]).reshape(1, -1)
+cols = ["a", "b", "c", "d"]
+
+print(pd.DataFrame.from_records(data=a, columns=cols))
+
+
+
+sigma = np.array([[1,2,3,2],[1,4,4,3],[4,7,6,3], [5,4,3,1]])
+print(sigma)
+sigma = pd.DataFrame.from_records(data=sigma, columns=cols)
+names = dict()
+i = 0
+for col in cols:
+    names[i] = col
+    i += 1
+sigma.rename(index=names, inplace=True)
+print(sigma.loc[['a', 'b'], ['b', 'd']])
+# print(sigma-sigma)
+
+
+
+
+
+
+
+
 
 # Observation from Histogram:
 # Status: Significantly more success than failure (TODO: perhaps SDC is missing lots of failure data? or not?)
