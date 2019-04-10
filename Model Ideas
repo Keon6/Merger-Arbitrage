@@ -17,10 +17,11 @@ Sparse GP
 Bayesian Gaussian Mixture Model Classification
 
 * Non-Bayesian:
-Naive Bayes Classification
+PCA + Naive Bayes Classification (to get rid of the issue of correlation + mixed categorical and real valued vars)
 Logistic Regression
-Neural Network (why not?) or SVM ?
 Gaussian Mixture Model Classification
+Probabilistic Neural Network (why not?)
+
 
 
 

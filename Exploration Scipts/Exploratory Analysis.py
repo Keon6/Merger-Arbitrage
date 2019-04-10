@@ -15,13 +15,16 @@ US_MERGER_DATA = pd.read_csv(us_data_path)
 # print("---- Null Count ----")
 # print(US_MERGER_DATA.isnull().sum())
 # print("---- Column Names and types ----")
-# colnames = US_MERGER_DATA.columns
+colnames = US_MERGER_DATA.columns
 # for col in colnames:
 #     print("'" + col+"'", US_MERGER_DATA[col].dtypes)
 
 
 # I. Explore How the Data is Distributed
 numerical_cols = US_MERGER_DATA.columns[3:30]
+print(US_MERGER_DATA.loc[[3, 4, 5]])
+Y = US_MERGER_DATA["Status"]
+print(Y.loc[[3, 400, 21, 6001]])
 # print("----- Non-null counts -----")
 # print(US_MERGER_DATA[numerical_cols].notnull().count())
 # print(US_MERGER_DATA[numerical_cols].dropna().shape[0])
@@ -79,33 +82,23 @@ numerical_cols = US_MERGER_DATA.columns[3:30]
 # print(sig-sig2)
 
 
-
-
-
-a = np.array([1,2,3,4]).reshape(1, -1)
-cols = ["a", "b", "c", "d"]
-
-print(pd.DataFrame.from_records(data=a, columns=cols))
-
-
-
-sigma = np.array([[1,2,3,2],[1,4,4,3],[4,7,6,3], [5,4,3,1]])
-print(sigma@sigma)
+# sigma = np.array([[1,2,3,2],[1,4,4,3],[4,7,6,3], [5,4,3,1]])
+# print(sigma@sigma)
+# # print(sigma)
+# sigma = pd.DataFrame.from_records(data=sigma, columns=cols)
+# names = dict()
+# i = 0
+# for col in cols:
+#     names[i] = col
+#     i += 1
+# sigma.rename(index=names, inplace=True)
+# print(sigma.loc[['a', 'b'], ['b', 'd']])
+# # print(sigma-np.array([[1,2,3,2],[1,4,4,3],[4,7,6,3], [5,4,3,1]]))
+#
+# print(sigma@sigma)
+# print(sigma@np.array([[1,2,3,2], [1,4,4,3], [4,7,6,3], [5,4,3,1]]))
+# sigma.loc["a", "a"] = (sigma@sigma).loc["a", "b"]
 # print(sigma)
-sigma = pd.DataFrame.from_records(data=sigma, columns=cols)
-names = dict()
-i = 0
-for col in cols:
-    names[i] = col
-    i += 1
-sigma.rename(index=names, inplace=True)
-print(sigma.loc[['a', 'b'], ['b', 'd']])
-# print(sigma-np.array([[1,2,3,2],[1,4,4,3],[4,7,6,3], [5,4,3,1]]))
-
-print(sigma@sigma)
-print(sigma@np.array([[1,2,3,2], [1,4,4,3], [4,7,6,3], [5,4,3,1]]))
-sigma.loc["a", "a"] = (sigma@sigma).loc["a", "b"]
-print(sigma)
 
 
 
