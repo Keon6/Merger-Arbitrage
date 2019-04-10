@@ -90,7 +90,8 @@ print(pd.DataFrame.from_records(data=a, columns=cols))
 
 
 sigma = np.array([[1,2,3,2],[1,4,4,3],[4,7,6,3], [5,4,3,1]])
-print(sigma)
+print(sigma@sigma)
+# print(sigma)
 sigma = pd.DataFrame.from_records(data=sigma, columns=cols)
 names = dict()
 i = 0
@@ -99,9 +100,12 @@ for col in cols:
     i += 1
 sigma.rename(index=names, inplace=True)
 print(sigma.loc[['a', 'b'], ['b', 'd']])
-# print(sigma-sigma)
+# print(sigma-np.array([[1,2,3,2],[1,4,4,3],[4,7,6,3], [5,4,3,1]]))
 
-
+print(sigma@sigma)
+print(sigma@np.array([[1,2,3,2], [1,4,4,3], [4,7,6,3], [5,4,3,1]]))
+sigma.loc["a", "a"] = (sigma@sigma).loc["a", "b"]
+print(sigma)
 
 
 

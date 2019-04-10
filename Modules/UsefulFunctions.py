@@ -1,9 +1,9 @@
-from numpy import log, sqrt, mean, sum, nanmean, asarray, dot
-from scipy.stats import invwishart, norm, multivariate_normal
-import numpy.ma as ma
-from numpy.linalg import inv
+from numpy import log, sqrt, mean, sum, asarray, dot
+from numpy.linalg import inv, pinv
+from scipy.stats import invwishart, multivariate_normal
 from Modules.Errors import DistributionTypeError
 import pandas as pd
+
 
 def mle_paramter_estimation(X, dis_typ):
     """
@@ -167,14 +167,14 @@ def multivariate_gaussian_bayesian_imputation(X, mu, sigma, estimation_method="e
 
         # conditional multivariate gaussian parameters
 
-        sigma_12 = asarray(sigma.loc[null_cols, available_cols])
-        sigma_22 = asarray(sigma.loc[available_cols, available_cols])
+        sigma_12 = sigma.loc[null_cols, available_cols]
+        sigma_22 = sigma.loc[available_cols, available_cols]
 
-        mu_cond = asarray(mu[null_cols]) + sigma_12 @ inv(sigma_22) @ asarray(available_values - mu[available_cols])
+        mu_cond = mu[null_cols] + sigma_12 @ inv(sigma_22) @ (available_values - mu[available_cols])
 
         if estimation_method == "random_sample":
-            sigma_11 = asarray(sigma.loc[null_cols, null_cols])
-            sigma_21 = asarray(sigma.loc[available_cols, null_cols])
+            sigma_11 = sigma.loc[null_cols, null_cols]
+            sigma_21 = sigma.loc[available_cols, null_cols]
 
             sigma_cond = sigma_11 - sigma_12@inv(sigma_22)@sigma_21
             X.loc[i, null_cols] = multivariate_normal.rvs(mean=mu_cond, cov=sigma_cond)
