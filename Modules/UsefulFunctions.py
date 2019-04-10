@@ -133,14 +133,14 @@ def multivariate_gaussian_bayesian_estimation(X, estimation_method="expectation"
                asarray(sigma_posterior_params[0]) / (sigma_posterior_params[1] - d + 1)
 
 
-def multivariate_gaussian_bayesian_imputation(X, mu, sigma, estimation_method="expectation"):
+def multivariate_gaussian_bayesian_imputation(X, mu, sigma, imputation_method="expectation"):
     # TODO: Test this function
     """
     :param X: Data in Pandas with missing data points
     :param mu: Mean vector of multivariate gaussian
     :param sigma: Cov matrix of multivariate gaussian
-    :param estimation_method:
-        "expectation": takes expectation of the parameters
+    :param imputation_method:
+        "expectation": takes expectation
         "MAP": takes MAP
         "random_sample": Take a random sample from the posterior distribution
         if None, just use expectation
@@ -172,7 +172,7 @@ def multivariate_gaussian_bayesian_imputation(X, mu, sigma, estimation_method="e
 
         mu_cond = mu[null_cols] + sigma_12 @ inv(sigma_22) @ (available_values - mu[available_cols])
 
-        if estimation_method == "random_sample":
+        if imputation_method == "random_sample":
             sigma_11 = sigma.loc[null_cols, null_cols]
             sigma_21 = sigma.loc[available_cols, null_cols]
 

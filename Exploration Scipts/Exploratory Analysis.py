@@ -16,15 +16,15 @@ US_MERGER_DATA = pd.read_csv(us_data_path)
 # print(US_MERGER_DATA.isnull().sum())
 # print("---- Column Names and types ----")
 colnames = US_MERGER_DATA.columns
-# for col in colnames:
-#     print("'" + col+"'", US_MERGER_DATA[col].dtypes)
+for col in colnames:
+    print("'" + col+"'", US_MERGER_DATA[col].dtypes)
 
 
 # I. Explore How the Data is Distributed
-numerical_cols = US_MERGER_DATA.columns[3:30]
-print(US_MERGER_DATA.loc[[3, 4, 5]])
-Y = US_MERGER_DATA["Status"]
-print(Y.loc[[3, 400, 21, 6001]])
+# numerical_cols = US_MERGER_DATA.columns[3:30]
+# print(US_MERGER_DATA.loc[[3, 4, 5]])
+# Y = US_MERGER_DATA["Status"]
+# print(Y.loc[[3, 400, 21, 6001]])
 # print("----- Non-null counts -----")
 # print(US_MERGER_DATA[numerical_cols].notnull().count())
 # print(US_MERGER_DATA[numerical_cols].dropna().shape[0])

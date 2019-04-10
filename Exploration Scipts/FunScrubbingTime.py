@@ -1,6 +1,3 @@
-"""
-
-"""
 import pandas as pd
 import re
 import numpy as np
@@ -41,8 +38,7 @@ intl_data_years.extend(list(range(1989, 2020, 2)))
 # II: Data Scrubbing
 # -> Remove "unnecessary" columns
 US_MERGER_DATA = US_MERGER_DATA.drop(
-    ["  Date Withdrawn", "  Date Effective", "Date Effective/ Unconditional", "Target Company  Date   of  Fin.",
-     "History File Event", "Target Name", "Acquiror Name"], axis=1
+    ["Target Company  Date   of  Fin.", "History File Event", "Target Name", "Acquiror Name"], axis=1
 )
 
 # -> Drop points with missing labels
@@ -89,6 +85,11 @@ del new
 # -> Convert data types for each column as appropriate
 US_MERGER_DATA[" Rank Date"] = pd.to_datetime(US_MERGER_DATA[" Rank Date"])
 US_MERGER_DATA["  Date Announced"] = pd.to_datetime(US_MERGER_DATA["  Date Announced"])
+US_MERGER_DATA["  Date Withdrawn"] = pd.to_datetime(US_MERGER_DATA["  Date Withdrawn"])
+US_MERGER_DATA["  Date Effective"] = pd.to_datetime(US_MERGER_DATA["  Date Effective"])
+US_MERGER_DATA["Date Effective/ Unconditional"] = pd.to_datetime(US_MERGER_DATA["Date Effective/ Unconditional"])
+
+
 colnames_dtype_map = {
     "Status": "category",
     "Value of Transaction ($mil)": "float64",
@@ -121,9 +122,15 @@ for col, dtype in colnames_dtype_map.items():
     US_MERGER_DATA[col] = US_MERGER_DATA[col].astype(dtype)
 
 # -> Rename columns to make them more legible
+US_MERGER_DATA["  Date Withdrawn"] = pd.to_datetime(US_MERGER_DATA["  Date Withdrawn"])
+US_MERGER_DATA["  Date Effective"] = pd.to_datetime(US_MERGER_DATA["  Date Effective"])
+US_MERGER_DATA["Date Effective/ Unconditional"] = pd.to_datetime(US_MERGER_DATA["Date Effective/ Unconditional"])
 US_MERGER_DATA.rename(columns={
     ' Rank Date': 'Rank Date',
     '  Date Announced': 'Announced Date',
+    "  Date Withdrawn": "Withdrawl Date",
+    "  Date Effective": "Effective Date",
+    "Date Effective/ Unconditional": "Date Effective / Unconditional",
     ' % of Shares Acq.': '% of Shares Acquired',
     '  % Owned After Trans- action': '% Owned After Transaction',
     '  % sought': '% Sought',
@@ -164,4 +171,4 @@ print("---- Null Count ----")
 print(US_MERGER_DATA.isnull().sum())
 
 # III. Save as CSV:
-US_MERGER_DATA.to_csv(us_data_path+"Scrubbed_No_DefaultDistance.csv", sep=",", index=False)
+US_MERGER_DATA.to_csv(us_data_path+"Scrubbed_No_DefaultDistance2.csv", sep=",", index=False)
