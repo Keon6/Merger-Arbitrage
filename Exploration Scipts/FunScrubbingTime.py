@@ -176,7 +176,6 @@ US_MERGER_DATA.rename(columns={
     'Target EBIT (YTD)': 'Target Interest Expense',
     'Target Net Asset': 'Target Total Liabilities',
 },  inplace=True)
-
 ##### END FEATURE ENGINEERING
 
 print("---- Column Names and types ----")
