@@ -198,8 +198,9 @@ US_MERGER_DATA['Withdrawl Date'] = pd.to_datetime(US_MERGER_DATA['Withdrawl Date
 US_MERGER_DATA['Deal Length (days)'] = US_MERGER_DATA['Effective Date'] - US_MERGER_DATA['Announced Date']
 index = US_MERGER_DATA[US_MERGER_DATA['Deal Length (days)'].isnull()].index.tolist()
 US_MERGER_DATA['Deal Length (days)'].loc[index] = (US_MERGER_DATA['Withdrawl Date'] - US_MERGER_DATA['Announced Date']).loc[index]
-# US_MERGER_DATA['Deal Length (days)'] = US_MERGER_DATA['Deal Length (days)'].astype("int64")
-index = US_MERGER_DATA[US_MERGER_DATA['Deal Length (days)'] == pd.Timedelta(0)].index.tolist()
+# Convert to days -> integers
+US_MERGER_DATA['Deal Length (days)'] = US_MERGER_DATA['Deal Length (days)'].dt.days
+index = US_MERGER_DATA[US_MERGER_DATA['Deal Length (days)'] == 0].index.tolist()
 US_MERGER_DATA['Deal Length (days)'].loc[index] = np.nan
 
 
