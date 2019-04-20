@@ -159,24 +159,46 @@ US_MERGER_DATA.rename(columns={
     ' Premium  4 weeks prior to ann. date': 'Premium 4 Weeks Prior To Announcement'
 },  inplace=True)
 
-##### JONATHAN'S FEATURE ENGINEERING
-# Net Debt = Enterprise Value - Equity Value
-# Depreciation Amortization = EBITDA - EBIT
-# Interest Expense = EBIT - Pre-Tax Income
-# Total Liabilities = Total Asset - Net Asset
+#### Feature Engineering
+# Drop unnecessary columns
+US_MERGER_DATA = US_MERGER_DATA.drop(['Offer Price / EPS', 'Rank Date', 'Date Effective / Unconditional'], axis=1)
+
+# Balance Sheet
+# 1) Net Debt = Enterprise Value - Equity Value
 US_MERGER_DATA['Target Net Debt'] = US_MERGER_DATA['Target Enterprise Value'] - US_MERGER_DATA['Target Equity Value']
-US_MERGER_DATA['Target EBITDA (YTD)'] = US_MERGER_DATA['Target EBITDA (YTD)'] - US_MERGER_DATA['Target EBIT (YTD)']
-US_MERGER_DATA['Target EBIT (YTD)'] = US_MERGER_DATA['Target EBIT (YTD)'] - US_MERGER_DATA['Target Pre-Tax Income (YTD)']
+# 2) Total Liabilities = Total Asset - Net Asset
 US_MERGER_DATA['Target Net Asset'] = US_MERGER_DATA['Target Total Asset'] - US_MERGER_DATA['Target Net Asset']
 
-US_MERGER_DATA.drop(['Target Enterprise Value', 'Offer Price / EPS'], axis = 1)
+# Income Sheet
+# Rev = Operating Expense + EBITDA
+# Rev = OE + D&A + IE + Tax + Net Income
+# 3) OE = Rev - EBITDA
+US_MERGER_DATA['Target  Net Sales (YTD)'] = US_MERGER_DATA['Target  Net Sales (YTD)'] - US_MERGER_DATA['Target EBITDA (YTD)']
+# 4) D&A = EBITDA - EBIT
+US_MERGER_DATA['Target EBITDA (YTD)'] = US_MERGER_DATA['Target EBITDA (YTD)'] - US_MERGER_DATA['Target EBIT (YTD)']
+# 5) IE = EBIT - Pre-Tax Income
+US_MERGER_DATA['Target EBIT (YTD)'] = US_MERGER_DATA['Target EBIT (YTD)'] - US_MERGER_DATA['Target Pre-Tax Income (YTD)']
+# 6) Tax = Pretax-Income - Net Income
+US_MERGER_DATA['Target Pre-Tax Income (YTD)'] = US_MERGER_DATA['Target Pre-Tax Income (YTD)'] - US_MERGER_DATA['Target Net Income (YTD)']
 
 US_MERGER_DATA.rename(columns={
-    'Target EBITDA (YTD)': 'Target Depreciation Amortization',
-    'Target EBIT (YTD)': 'Target Interest Expense',
-    'Target Net Asset': 'Target Total Liabilities',
+    'Target  Net Sales (YTD)': 'Target Operating Expense (YTD)',
+    'Target EBITDA (YTD)': 'Target Depreciation & Amortization (YTD)',
+    'Target EBIT (YTD)': 'Target Interest Expense (YTD)',
+    'Target Pre-Tax Income (YTD)': 'Target Tax (YTD)',
+    'Target Net Asset': 'Target Total Liabilities'
 },  inplace=True)
-##### END FEATURE ENGINEERING
+
+# Dates
+US_MERGER_DATA['Announced Date'] = pd.to_datetime(US_MERGER_DATA['Announced Date'])
+US_MERGER_DATA['Effective Date'] = pd.to_datetime(US_MERGER_DATA['Effective Date'])
+US_MERGER_DATA['Withdrawl Date'] = pd.to_datetime(US_MERGER_DATA['Withdrawl Date'])
+
+# 7) Deal Length
+US_MERGER_DATA['Deal Length (days)'] = US_MERGER_DATA['Effective Date'] - US_MERGER_DATA['Announced Date']
+index = US_MERGER_DATA[US_MERGER_DATA['Deal Length (days)'].isnull()].index.tolist()
+US_MERGER_DATA['Deal Length (days)'].loc[index] = (US_MERGER_DATA['Withdrawl Date'] - US_MERGER_DATA['Announced Date']).loc[index]
+
 
 print("---- Column Names and types ----")
 colnames = US_MERGER_DATA.columns
