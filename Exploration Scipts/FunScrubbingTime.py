@@ -159,6 +159,35 @@ US_MERGER_DATA.rename(columns={
     ' Premium  4 weeks prior to ann. date': 'Premium 4 Weeks Prior To Announcement'
 },  inplace=True)
 
+##### JONATHAN'S FEATURE ENGINEERING
+# Net Debt = Enterprise Value - Equity Value
+# Depreciation Amortization = EBITDA - EBIT
+# Interest Expense = EBIT - Pre-Tax Income
+# Total Liabilities = Total Asset - Net Asset
+US_MERGER_DATA['Target Net Debt'] = US_MERGER_DATA['Target Enterprise Value'] - US_MERGER_DATA['Target Equity Value']
+US_MERGER_DATA['Target EBITDA (YTD)'] = US_MERGER_DATA['Target EBITDA (YTD)'] - US_MERGER_DATA['Target EBIT (YTD)']
+US_MERGER_DATA['Target EBIT (YTD)'] = US_MERGER_DATA['Target EBIT (YTD)'] - US_MERGER_DATA['Target Pre-Tax Income (YTD)']
+US_MERGER_DATA['Target Net Asset'] = US_MERGER_DATA['Target Total Asset'] - US_MERGER_DATA['Target Net Asset']
+
+US_MERGER_DATA.drop(['Target Enterprise Value', 'Offer Price / EPS'], axis = 1)
+
+US_MERGER_DATA.rename(columns={
+    'Target EBITDA (YTD)': 'Target Depreciation Amortization',
+    'Target EBIT (YTD)': 'Target Interest Expense',
+    'Target Net Asset': 'Target Total Liabilities',
+},  inplace=True)
+##### END FEATURE ENGINEERING
+
+print("---- Column Names and types ----")
+colnames = US_MERGER_DATA.columns
+for col in colnames:
+    print("'" + col+"'", US_MERGER_DATA[col].dtypes)
+
+
+print("---- Shape ----")
+print(US_MERGER_DATA.shape)
+print("---- Null Count ----")
+print(US_MERGER_DATA.isnull().sum())
 
 
 # III. Save as CSV:
