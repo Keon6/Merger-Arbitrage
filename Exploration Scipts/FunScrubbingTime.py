@@ -198,12 +198,9 @@ US_MERGER_DATA['Withdrawl Date'] = pd.to_datetime(US_MERGER_DATA['Withdrawl Date
 US_MERGER_DATA['Deal Length (days)'] = US_MERGER_DATA['Effective Date'] - US_MERGER_DATA['Announced Date']
 index = US_MERGER_DATA[US_MERGER_DATA['Deal Length (days)'].isnull()].index.tolist()
 US_MERGER_DATA['Deal Length (days)'].loc[index] = (US_MERGER_DATA['Withdrawl Date'] - US_MERGER_DATA['Announced Date']).loc[index]
-
-
-print("---- Column Names and types ----")
-colnames = US_MERGER_DATA.columns
-for col in colnames:
-    print("'" + col+"'", US_MERGER_DATA[col].dtypes)
+# US_MERGER_DATA['Deal Length (days)'] = US_MERGER_DATA['Deal Length (days)'].astype("int64")
+index = US_MERGER_DATA[US_MERGER_DATA['Deal Length (days)'] == pd.Timedelta(0)].index.tolist()
+US_MERGER_DATA['Deal Length (days)'].loc[index] = np.nan
 
 
 print("---- Shape ----")
@@ -213,4 +210,4 @@ print(US_MERGER_DATA.isnull().sum())
 
 
 # III. Save as CSV:
-US_MERGER_DATA.to_csv(us_data_path+"Scrubbed_No_DefaultDistance2.csv", sep=",", index=False)
+US_MERGER_DATA.to_csv(us_data_path+"Scrubbed_No_DefaultDistance.csv", sep=",", index=False)
