@@ -178,3 +178,4 @@ def multivariate_gaussian_bayesian_imputation(X, mu, sigma, imputation_method="e
                 X.at[i, col] = mu_cond[col]
 
 
+    return X
