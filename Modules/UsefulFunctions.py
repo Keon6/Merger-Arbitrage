@@ -1,7 +1,6 @@
 from numpy import log, sqrt, mean, sum, asarray, dot
 from numpy.linalg import inv, pinv
 from scipy.stats import invwishart, multivariate_normal
-from Modules.Errors import DistributionTypeError
 import pandas as pd
 
 
@@ -70,7 +69,7 @@ def multivariate_gaussian_bayesian_estimation(X, estimation_method="expectation"
     :param psi: (Scale) If not none, use custom priors
     :param nu_0: (Degree of Freedom) number of samples to use to estimate sigma_0 = (1/m)*sigma & Psi = nu_0*sigma_0 such that sample mean = mu_0
 
-    :return:
+    :return: posterior mean (d x 1) and sigma (d x d)
     """
     X = X.dropna()
     n, d = X.shape  # number of samples, dimensionality
@@ -78,33 +77,30 @@ def multivariate_gaussian_bayesian_estimation(X, estimation_method="expectation"
     # I: Derive Posterior
     # -> Deal with unspecified m and nu_0
     if m and nu_0: # both m and nu_0 are specified
-        print("m&nu")
         pass
     elif not m and not nu_0: # neither are specified
-        print("!m & !nu")
         m = n
         nu_0 = n
     elif nu_0: # only nu_0 is specified
-        print("!m")
         m = nu_0
     elif m:  # only m is specified
-        print("!nu")
         nu_0 = m
 
+    # print(n, m, nu_0)
     # -> Deal with No custom Priors
     # TODO: X.sample(n=m) or X.sample(n=nu_0) ????
     if not mu_0 and not sigma_0:  # both mu_0 and sigma_0 are not specified
-        print("!mu & !sig")
         mu_0, sigma_0 = multivariate_gaussian_parameter_estimation(X.sample(n=m))
     elif not mu_0:  # only mu_0 is not specified
-        print("!mu")
         mu_0 = X.sample(n=m).mean()
     elif not sigma_0:  # only sigma_0 is not specified
-        print("!sig")
         sigma_0 = X.sample(n=m).cov()
     if not psi:
-        print("!psi")
         psi = nu_0 * sigma_0
+
+    # print("mu", mu_0)
+    # print("sigma", sigma_0)
+    # print("psi", psi)
 
     # Find Posterior Distribution Parameters
     x_bar, S = multivariate_gaussian_parameter_estimation(X)
@@ -163,20 +159,22 @@ def multivariate_gaussian_bayesian_imputation(X, mu, sigma, imputation_method="e
         null_cols = X.columns[nulls]
         available_cols = X.columns[~nulls]
 
-        available_values = asarray(X.loc[i, available_cols])
+        available_values = asarray(X.loc[i, available_cols]).reshape(-1, 1)
 
         # conditional multivariate gaussian parameters
 
         sigma_12 = sigma.loc[null_cols, available_cols]
         sigma_22 = sigma.loc[available_cols, available_cols]
 
-        mu_cond = mu[null_cols] + sigma_12 @ inv(sigma_22) @ (available_values - mu[available_cols])
-
+        mu_cond = mu[null_cols] + dot(dot(sigma_12, inv(sigma_22)), asarray(available_values - mu[available_cols].T) ).T
         if imputation_method == "random_sample":
             sigma_11 = sigma.loc[null_cols, null_cols]
             sigma_21 = sigma.loc[available_cols, null_cols]
 
             sigma_cond = sigma_11 - sigma_12@inv(sigma_22)@sigma_21
-            X.loc[i, null_cols] = multivariate_normal.rvs(mean=mu_cond, cov=sigma_cond)
+            X.at[i, null_cols] = multivariate_normal.rvs(mean=mu_cond, cov=sigma_cond)
         else:
-            X.loc[i, null_cols] = mu_cond
+            for col in null_cols:
+                X.at[i, col] = mu_cond[col]
+
+
