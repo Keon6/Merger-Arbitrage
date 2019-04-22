@@ -1,0 +1,132 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import KFold, StratifiedKFold, train_test_split
+from sklearn.metrics import roc_auc_score, accuracy_score
+
+from sklearn.decomposition import PCA, KernelPCA
+from sklearn.naive_bayes import GaussianNB
+from sklearn.linear_model import LogisticRegression, SGDClassifier
+from sklearn.svm import SVC
+from UsefulFunctions import multivariate_gaussian_bayesian_imputation, multivariate_gaussian_bayesian_estimation
+
+
+X = pd.read_csv("/Users/olin/Downloads/US_Merger_Data_Imputed2.csv", index_col=0)
+
+X_missing = pd.read_csv("/Users/olin/Downloads/US_Merger_Data_Scrubbed2.csv")
+Y = X_missing["Status"]
+# X[non_categorical_column_names].apply(np.log)
+
+X_missing = X_missing.drop(["Status", 'Offer Price / EPS', 'Rank Date', 'Date Effective / Unconditional'], axis=1)
+
+# 1) Net Debt = Enterprise Value - Equity Value
+X_missing['Target Net Debt'] = X_missing['Target Enterprise Value'] - X_missing['Target Equity Value']
+# # 2) Total Liabilities = Total Asset - Net Asset
+# US_MERGER_DATA['Target Net Asset'] = US_MERGER_DATA['Target Total Asset'] - US_MERGER_DATA['Target Net Asset']
+
+# # # 2) Total Liabilities = Total Asset - Net Asset
+# X_missing['Target Net Asset'] = X_missing['Target Total Asset'] - X_missing['Target Net Asset']
+#
+# # Income Sheet
+# # Rev = Operating Expense + EBITDA
+# # Rev = OE + D&A + IE + Tax + Net Income
+# # 3) OE = Rev - EBITDA
+# X_missing['Target  Net Sales (YTD)'] = X_missing['Target  Net Sales (YTD)'] - X_missing['Target EBITDA (YTD)']
+#
+# # 4) D&A = EBITDA - EBIT
+# X_missing['Target EBITDA (YTD)'] = X_missing['Target EBITDA (YTD)'] - X_missing['Target EBIT (YTD)']
+#
+# # 5) IE = EBIT - Pre-Tax Income
+# X_missing['Target EBIT (YTD)'] = X_missing['Target EBIT (YTD)'] - X_missing['Target Pre-Tax Income (YTD)']
+#
+# # 6) Tax = Pretax-Income - Net Income
+# X_missing['Target Pre-Tax Income (YTD)'] = X_missing['Target Pre-Tax Income (YTD)'] - X_missing['Target Net Income (YTD)']
+#
+# X_missing.rename(columns={
+#     'Target  Net Sales (YTD)': 'Target Operating Expense (YTD)',
+#     'Target EBITDA (YTD)': 'Target Depreciation & Amortization (YTD)',
+#     'Target EBIT (YTD)': 'Target Interest Expense (YTD)',
+#     'Target Pre-Tax Income (YTD)': 'Target Tax (YTD)',
+#     'Target Net Asset': 'Target Total Liabilities'
+# },  inplace=True)
+#
+# # Dates
+# print(US_MERGER_DATA[['Announced Date', 'Effective Date', 'Withdrawl Date']].head())
+X_missing['Announced Date'] = pd.to_datetime(X_missing['Announced Date'])
+X_missing['Effective Date'] = pd.to_datetime(X_missing['Effective Date'])
+X_missing['Withdrawl Date'] = pd.to_datetime(X_missing['Withdrawl Date'])
+#
+# 7)
+X_missing['Deal Length (days)'] = X_missing['Effective Date'] - X_missing['Announced Date']
+index = X_missing[X_missing['Deal Length (days)'].isnull()].index.tolist()
+X_missing['Deal Length (days)'].loc[index] = (X_missing['Withdrawl Date'] - X_missing['Announced Date']).loc[index]
+X_missing['Deal Length (days)'] = X_missing['Deal Length (days)'].dt.days
+index = X_missing[X_missing['Deal Length (days)'] == 0].index.tolist()
+X_missing['Deal Length (days)'].loc[index] = np.nan
+X_missing = X_missing.drop(['Announced Date', 'Effective Date', 'Withdrawl Date'], axis=1)
+
+
+# print(X.shape)
+# print(Y.shape)
+
+
+X = np.asarray(X)
+X_missing = np.asarray(X_missing)
+Y = np.asarray(Y)
+
+labels = {
+    "Completed": True,
+    "Part Comp": True,
+    "Withdrawn": False
+}
+
+Ys = np.zeros((len(Y), ))
+for i in range(len(Y)):
+    Ys[i] = labels[Y[i]]
+
+# print(Y.dtype)
+from sklearn.impute import SimpleImputer
+
+X_missing = SimpleImputer(missing_values=np.nan, strategy="mean").fit_transform(X_missing)
+pca = PCA()
+X_missing = pca.fit_transform(X_missing)
+
+# X = pca.fit_transform(X)
+# pca.fit_transform(X_missing)
+# X_train, X_test, Y_train, Y_test = train_test_split(X, Ys, test_size=0.33)
+X_train, X_test, Y_train, Y_test = train_test_split(X_missing, Ys, test_size=0.33)
+
+skf = StratifiedKFold(n_splits=10)
+
+# I. Gaussian Naive Bayes
+NB_scores = list()  # score list for Naive Bayes
+for train_indices, val_indices in skf.split(X_train, Y_train):
+    X_tr, X_val = X_train[train_indices], X_train[val_indices]
+    Y_tr, Y_val = Y_train[train_indices], Y_train[val_indices]
+
+    ngb = GaussianNB()
+    ngb.fit(X_tr, Y_tr)
+    NB_scores.append(roc_auc_score(y_true=Y_val, y_score=ngb.predict(X_val)))
+print(NB_scores)
+
+
+# II. Logistic Regression with Elastic Net Regularization + SGD
+LGR_scores = list()  # score list for Logistic Regression
+for train_indices, val_indices in skf.split(X_train, Y_train):
+    X_tr, X_val = X_train[train_indices], X_train[val_indices]
+    Y_tr, Y_val = Y_train[train_indices], Y_train[val_indices]
+
+    lgr = SGDClassifier(loss="log", penalty="elasticnet")
+    lgr.fit(X_tr, Y_tr)
+    LGR_scores.append(roc_auc_score(y_true=Y_val, y_score=lgr.predict(X_val)))
+print(LGR_scores)
+
+# III SVM
+SVC_scores = list()  # score list for Logistic Regression
+for train_indices, val_indices in skf.split(X_train, Y_train):
+    X_tr, X_val = X_train[train_indices], X_train[val_indices]
+    Y_tr, Y_val = Y_train[train_indices], Y_train[val_indices]
+
+    svc = SVC()
+    svc.fit(X_tr, Y_tr)
+    SVC_scores.append(roc_auc_score(y_true=Y_val, y_score=svc.predict(X_val)))
+print(SVC_scores)
