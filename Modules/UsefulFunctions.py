@@ -2,8 +2,11 @@ from numpy import log, sqrt, mean, sum, asarray, dot
 from numpy.linalg import inv, pinv
 from scipy.stats import invwishart, multivariate_normal
 import pandas as pd
+import numba
+from Modules.Errors import DistributionTypeError
 
 
+@numba.jit
 def mle_paramter_estimation(X, dis_typ):
     """
     :param X:
@@ -30,7 +33,7 @@ def mle_paramter_estimation(X, dis_typ):
     else:
         raise DistributionTypeError("No such distribution supported")
 
-
+@numba.jit
 def multivariate_gaussian_parameter_estimation(X):
     """
     X should be a pandas DataFrame
@@ -39,7 +42,7 @@ def multivariate_gaussian_parameter_estimation(X):
     """
     return X.mean(), X.cov()
 
-
+@numba.jit
 def multivariate_gaussian_bayesian_estimation(X, estimation_method="expectation",
                                               m=None, mu_0=None, sigma_0=None,
                                               psi=None, nu_0=None):
@@ -128,7 +131,7 @@ def multivariate_gaussian_bayesian_estimation(X, estimation_method="expectation"
         return asarray(mu_posterior_params[0]).reshape(-1, 1), \
                asarray(sigma_posterior_params[0]) / (sigma_posterior_params[1] - d + 1)
 
-
+@numba.jit
 def multivariate_gaussian_bayesian_imputation(X, mu, sigma, imputation_method="expectation"):
     # TODO: Test this function
     """
@@ -166,12 +169,12 @@ def multivariate_gaussian_bayesian_imputation(X, mu, sigma, imputation_method="e
         sigma_12 = sigma.loc[null_cols, available_cols]
         sigma_22 = sigma.loc[available_cols, available_cols]
 
-        mu_cond = mu[null_cols] + dot(dot(sigma_12, inv(sigma_22)), asarray(available_values - mu[available_cols].T) ).T
+        mu_cond = mu[null_cols] + dot(dot(sigma_12, pinv(sigma_22)), asarray(available_values - mu[available_cols].T) ).T
         if imputation_method == "random_sample":
             sigma_11 = sigma.loc[null_cols, null_cols]
             sigma_21 = sigma.loc[available_cols, null_cols]
 
-            sigma_cond = sigma_11 - sigma_12@inv(sigma_22)@sigma_21
+            sigma_cond = sigma_11 - sigma_12@pinv(sigma_22)@sigma_21
             X.at[i, null_cols] = multivariate_normal.rvs(mean=mu_cond, cov=sigma_cond)
         else:
             for col in null_cols:

@@ -2,16 +2,16 @@ import pandas as pd
 import numpy as np
 
 
-us_data_path = "/Users/olin/Downloads/US_Merger_Data_Scrubbed2.csv"
+us_data_path = "C:/Users/kevin/Desktop/US_Merger_Data_Scrubbed2.csv"
 US_MERGER_DATA = pd.read_csv(us_data_path)
 
 
 # print("---- Null Count ----")
-# print(US_MERGER_DATA.isnull().sum())
+print(US_MERGER_DATA.isnull().sum())
 
 # Feature Engineering
 # Drop unnecessary columns
-US_MERGER_DATA = US_MERGER_DATA.drop(['Offer Price / EPS', 'Rank Date', 'Date Effective / Unconditional'], axis=1)
+# US_MERGER_DATA = US_MERGER_DATA.drop(['Offer Price / EPS', 'Rank Date', 'Date Effective / Unconditional'], axis=1)
 
 
 # 1) Net Debt = Enterprise Value - Equity Value
@@ -44,13 +44,13 @@ US_MERGER_DATA['Deal Length (days)'].loc[index] = np.nan
 # print(US_MERGER_DATA.isnull().sum())
 
 
-from UsefulFunctions import multivariate_gaussian_bayesian_imputation, multivariate_gaussian_bayesian_estimation
+from Modules.UsefulFunctions import multivariate_gaussian_bayesian_imputation, multivariate_gaussian_bayesian_estimation
 
 
-US_MERGER_DATA = US_MERGER_DATA.drop(['Announced Date', 'Effective Date', 'Withdrawl Date'], axis=1)
-
+X = US_MERGER_DATA.drop(['Announced Date', 'Effective Date', 'Withdrawl Date', "Status", 'Offer Price / EPS', 'Rank Date', 'Date Effective / Unconditional'], axis=1)
 Y = US_MERGER_DATA["Status"]
-X = US_MERGER_DATA.drop(["Status"], axis=1)
+del US_MERGER_DATA
+
 
 print(X.columns[:26])
 non_categorical_column_names = list(X.columns[:26])
@@ -62,22 +62,14 @@ for col in non_categorical_column_names:
     inds = X[X[col] == -float("inf")].index.tolist()
     X[col].loc[inds] = np.nan
 
-X1 = X[non_categorical_column_names].dropna()
 
-# print(X1.mean())
-# X1 = np.asarray(X1)
-# print(np.mean(X1, axis=0))
-# print(np.var(X1, axis=0))
-
-# print(X1.mean())
-# print(X1.cov())
-mu, Sigma = multivariate_gaussian_bayesian_estimation(X=X1)
+mu, Sigma = multivariate_gaussian_bayesian_estimation(X=X[non_categorical_column_names].dropna())
 # print(mu)
 # print(Sigma)
 # print(mu.shape)
 # print(Sigma.shape)
 X[non_categorical_column_names] = multivariate_gaussian_bayesian_imputation(X=X[non_categorical_column_names], mu=mu, sigma=Sigma)
-print(X[X==np.nan].index)
+# print(X[X==np.nan].index)
 # print(X.columns[:26])
 
 # Feature engineering
@@ -116,7 +108,8 @@ X.rename(columns={
 },  inplace=True)
 
 
-X.to_csv("/Users/olin/Downloads/US_Merger_Data_Imputed.csv")
+X.to_csv("C:/Users/kevin/Desktop/US_Merger_Data_Imputed.csv")
+
 
 
 

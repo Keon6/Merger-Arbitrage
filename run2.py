@@ -1,17 +1,28 @@
 import pandas as pd
 import numpy as np
+from Modules.Models.LocalGP import LGPC_CV, LocalGaussianProcessClassifier
+from sklearn.gaussian_process.kernels import (Matern, RationalQuadratic,
+                                              ExpSineSquared, RBF, ConstantKernel,
+                                              Product, Sum, WhiteKernel)
+from sklearn.model_selection import KFold, StratifiedKFold, train_test_split
+from sklearn.metrics import roc_auc_score, accuracy_score
+
+from sklearn.decomposition import PCA, KernelPCA
+from sklearn.naive_bayes import GaussianNB
+from sklearn.linear_model import LogisticRegression, SGDClassifier
 
 
-us_data_path = "/Users/olin/Downloads/US_Merger_Data_Scrubbed2.csv"
+us_data_path = "C:/Users/kevin/Desktop/US_Merger_Data_Scrubbed2.csv"
+
 US_MERGER_DATA = pd.read_csv(us_data_path)
-
+del us_data_path
 
 # print("---- Null Count ----")
 # print(US_MERGER_DATA.isnull().sum())
 
 # Feature Engineering
 # Drop unnecessary columns
-US_MERGER_DATA = US_MERGER_DATA.drop(['Offer Price / EPS', 'Rank Date', 'Date Effective / Unconditional'], axis=1)
+# US_MERGER_DATA = US_MERGER_DATA.drop(['Offer Price / EPS', 'Rank Date', 'Date Effective / Unconditional'], axis=1)
 
 
 # 1) Net Debt = Enterprise Value - Equity Value
@@ -72,13 +83,12 @@ US_MERGER_DATA['Deal Length (days)'].loc[index] = np.nan
 # print(US_MERGER_DATA.isnull().sum())
 
 
-from UsefulFunctions import multivariate_gaussian_bayesian_imputation, multivariate_gaussian_bayesian_estimation
+from Modules.UsefulFunctions import multivariate_gaussian_bayesian_imputation, multivariate_gaussian_bayesian_estimation
 
 
-US_MERGER_DATA = US_MERGER_DATA.drop(['Announced Date', 'Effective Date', 'Withdrawl Date'], axis=1)
-
+X = US_MERGER_DATA.drop(['Announced Date', 'Effective Date', 'Withdrawl Date', "Status", 'Offer Price / EPS', 'Rank Date', 'Date Effective / Unconditional'], axis=1)
 Y = US_MERGER_DATA["Status"]
-X = US_MERGER_DATA.drop(["Status"], axis=1)
+del US_MERGER_DATA
 
 print(X.columns[:26])
 non_categorical_column_names = list(X.columns[:26])
@@ -90,7 +100,7 @@ for col in non_categorical_column_names:
     inds = X[X[col] == -float("inf")].index.tolist()
     X[col].loc[inds] = np.nan
 
-X1 = X[non_categorical_column_names].dropna()
+# X1 = X[non_categorical_column_names].dropna()
 
 # print(X1.mean())
 # X1 = np.asarray(X1)
@@ -99,45 +109,77 @@ X1 = X[non_categorical_column_names].dropna()
 
 # print(X1.mean())
 # print(X1.cov())
-mu, Sigma = multivariate_gaussian_bayesian_estimation(X=X1)
+mu, Sigma = multivariate_gaussian_bayesian_estimation(X=X[non_categorical_column_names].dropna())
 # print(mu)
 # print(Sigma)
 # print(mu.shape)
 # print(Sigma.shape)
 X[non_categorical_column_names] = multivariate_gaussian_bayesian_imputation(X=X[non_categorical_column_names], mu=mu, sigma=Sigma)
-print(X[X==np.nan].index)
+# print(X[X==np.nan].index)
 # print(X.columns[:26])
 
 # Feature engineering
 # Balance Sheet
 
 # X[non_categorical_column_names] = X[non_categorical_column_names].apply(np.exp)
+# X.to_csv("C:/Users/kevin/Desktop/US_Merger_Data_Imputed2.csv")
+# X = np.asarray(X)
+# X_missing = np.asarray(X_missing)
+# Y = np.asarray(Y)
+
+labels = {
+    "Completed": "Success",
+    "Part Comp": "Success",
+    "Withdrawn": "Failure"
+}
+
+# Ys = np.str((len(Y), ))
+for i in range(len(Y)):
+    Y[i] = labels[Y[i]]
+
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.33)
+del X, Y
+
+skf = StratifiedKFold(n_splits=10)
+
+# I. Gaussian Naive Bayes
+NB_scores = list()  # score list for Naive Bayes
+for train_indices, val_indices in skf.split(X_train, Y_train):
+    # X_tr, X_val = X_train[train_indices], X_train[val_indices]
+    # Y_tr, Y_val = Y_train[train_indices], Y_train[val_indices]
+
+    ngb = GaussianNB()
+    ngb.fit(X_train[train_indices], Y_train[train_indices])
+    NB_scores.append(roc_auc_score(y_true=Y_train[val_indices], y_score=ngb.predict(X_train[val_indices])))
+print(NB_scores)
 
 
+# II. Logistic Regression with Elastic Net Regularization + SGD
+LGR_scores = list()  # score list for Logistic Regression
+for train_indices, val_indices in skf.split(X_train, Y_train):
+    # X_tr, X_val = X_train[train_indices], X_train[val_indices]
+    # Y_tr, Y_val = Y_train[train_indices], Y_train[val_indices]
 
+    lgr = SGDClassifier(loss="log", penalty="elasticnet")
+    lgr.fit(X_train[train_indices], Y_train[train_indices])
+    LGR_scores.append(roc_auc_score(y_true=Y_train[val_indices], y_score=lgr.predict(X_train[val_indices])))
+print(LGR_scores)
 
-X.to_csv("/Users/olin/Downloads/US_Merger_Data_Imputed2.csv")
-
-
-
-# # Data Split for CV
-# kf = KFold(n_splits=10)
-# NB_scores = list()  # score list for Naive Bayes
-# LGR_scores = list()  # score list for Logistic Regression
-# # skf = StratifiedKFold(n_splits=10)
-# for train_indices, test_indices in kf.split(X):
-#     X_train, X_test = X.loc[train_indices], X.loc[test_indices]
-#     X_pca_train, X_pca_test = X_pca[train_indices], X_pca[test_indices]
-#     Y_train, Y_test = Y.loc[train_indices], Y.loc[test_indices]
+# # III SVM
+# SVC_scores = list()  # score list for Logistic Regression
+# for train_indices, val_indices in skf.split(X_train, Y_train):
+#     X_tr, X_val = X_train[train_indices], X_train[val_indices]
+#     Y_tr, Y_val = Y_train[train_indices], Y_train[val_indices]
 #
-#     # I. PCA + Gaussian Naive Bayes
-#     ngb = GaussianNB()
-#     ngb.fit(X_pca_train, Y_train)
-#     NB_scores.append(roc_auc_score(y_true=Y_test, y_score=ngb.predict(X_pca_test)))
-#
-#     # II. Logistic Regression with Elastic Net Regularization + SGD
-#     lgr = SGDClassifier(loss="log", penalty="elasticnet")
-#     lgr.fit(X_train, Y_train)
-#     LGR_scores.append(roc_auc_score(y_true=Y_test, y_score=lgr.predict(X_pca_test)))
-#
-#     # III.
+#     svc = SVC()
+#     svc.fit(X_tr, Y_tr)
+#     SVC_scores.append(roc_auc_score(y_true=Y_val, y_score=svc.predict(X_val)))
+# print(SVC_scores)
+
+# III. Local GP
+LGPC = LocalGaussianProcessClassifier(kernel_hyperparams=None, kernel_type="Matern", k=100,
+                                      custom_kernel=Sum(Product(ConstantKernel(), Matern()), WhiteKernel()))
+LGPC_scores = LGPC_CV(LGPC, score_criteria=roc_auc_score, n_splits=10).run_cv(X=X_train, Y=Y_train)
+
+print(LGPC_scores)
+

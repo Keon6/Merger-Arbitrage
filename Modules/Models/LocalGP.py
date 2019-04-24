@@ -145,8 +145,8 @@ class LGPC_CV:
         cv_scores = []
         splits = self.split_method(self.n_splits)
         for tv_index, val_index in splits.split(X, Y):
-            X_tv, Y_tv = X[tv_index], Y[tv_index]
-            X_val, Y_val = X[val_index], Y[val_index]
+            X_tv, Y_tv = X.iloc[tv_index], Y.iloc[tv_index]
+            X_val, Y_val = X.iloc[val_index], Y.iloc[val_index]
             cv_scores.append(self.model.test_score(X_tv, Y_tv, X_val, Y_val, self.score_criteria))
         return cv_scores
 
