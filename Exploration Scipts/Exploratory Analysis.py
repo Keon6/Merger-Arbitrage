@@ -6,7 +6,7 @@ from Modules.UsefulFunctions import multivariate_gaussian_parameter_estimation, 
 from plotly.offline import plot
 import plotly.graph_objs as go
 
-us_data_path = "C:/Users/kevin/OneDrive/Desktop/RISK ARBITRAGE/SDC/US_Merger_Data_Scrubbed_No_DefaultDistance.csv"
+us_data_path = "C:/Users/kevin/OneDrive/Desktop/RISK ARBITRAGE/SDC/Data1/US_Merger_Data_Scrubbed_No_DefaultDistance.csv"
 intl_data_path = "C:/Users/kevin/OneDrive/Desktop/RISK ARBITRAGE/SDC/Intl_Merger_Data_Scrubbed_No_DefaultDistance.csv"
 
 US_MERGER_DATA = pd.read_csv(us_data_path)
@@ -21,29 +21,29 @@ for col in colnames:
 
 
 # I. Explore How the Data is Distributed
-# numerical_cols = US_MERGER_DATA.columns[3:30]
-# print(US_MERGER_DATA.loc[[3, 4, 5]])
-# Y = US_MERGER_DATA["Status"]
-# print(Y.loc[[3, 400, 21, 6001]])
-# print("----- Non-null counts -----")
-# print(US_MERGER_DATA[numerical_cols].notnull().count())
-# print(US_MERGER_DATA[numerical_cols].dropna().shape[0])
-# i = 3
-# for col in numerical_cols:
-#     if i <= 5:
-#         X = US_MERGER_DATA[col]
-#     else:
-#         X = np.log(US_MERGER_DATA[col])
-#     a = col.replace("/", " per ")
-#     data = [go.Histogram(
-#         x=X,
-#         histnorm='probability'
-#     )]
-#     layout = go.Layout(
-#         title=col
-#     )
-#     plot(data, filename=f"{a}")
-#     i += 1
+numerical_cols = US_MERGER_DATA.columns[15:25]
+print(US_MERGER_DATA.loc[[3, 4, 5]])
+Y = US_MERGER_DATA["Status"]
+print(Y.loc[[3, 400, 21, 6001]])
+print("----- Non-null counts -----")
+print(US_MERGER_DATA[numerical_cols].notnull().count())
+print(US_MERGER_DATA[numerical_cols].dropna().shape[0])
+i = 3
+for col in numerical_cols:
+    if i <= 5:
+        X = np.log(US_MERGER_DATA[col])
+    else:
+        X = US_MERGER_DATA[col]
+    a = col.replace("/", " per ")
+    data = [go.Histogram(
+        x=X,
+        histnorm='probability'
+    )]
+    layout = go.Layout(
+        title=col
+    )
+    plot(data, filename=f"{a}")
+    i += 1
 
 # II. Transform Numerical Data to multivariate Gaussian
 
